@@ -1,13 +1,14 @@
 #Entry terminal
-from pickle import FALSE
+
 import re
 
 menu_options = {
     1: 'Wjedź na parking',
     2: 'Sprawdź bilans karty',
-    3: 'Exit',
+    3: 'Wyjście'
 }
-class customer: 
+
+class Customer:
     def __init__(self, name, card_number, card_balance): 
         self.name = name 
         self.card_number = card_number
@@ -15,10 +16,10 @@ class customer:
 
 #PSEUDO DATABASE
 customer_list = []
-customer_list.append(customer('Paweł', 1234, -400))
-customer_list.append(customer('Szymon', 2345, 500))
-customer_list.append(customer('Łukasz', 3456, -600))
-customer_list.append(customer('Danil', 4567, 700))
+customer_list.append(Customer('Paweł', 1234, -400))
+customer_list.append(Customer('Szymon', 2345, 500))
+customer_list.append(Customer('Łukasz', 3456, -600))
+customer_list.append(Customer('Danil', 4567, 700))
 
 def print_menu():
     for key in menu_options.keys():
@@ -26,31 +27,26 @@ def print_menu():
 
 def validate_pin(card_number):
     if len(card_number) == 4:
-        if re.search('[^0-9]', card_number) == None: 
-            return True
-        else:
-            return False
+        return re.search('[^0-9]', card_number) is None
     else:   
         return False
 
 def option1():
-    print('Witaj w systemie parkingowym')
     print('Wpisz numer karty, aby móc wjechać na parking')
 
-    card_number_input = ''
     card_number_input = input('Twój kod pin: ')
 
-    if validate_pin(card_number_input) == True:
+    if validate_pin(card_number_input):
         tmp_check_owner_of_card_number = 0
 
-        while(tmp_check_owner_of_card_number < 4):
+        while tmp_check_owner_of_card_number < 4:
 
-            if (int(card_number_input) == customer_list[tmp_check_owner_of_card_number].card_number):
+            if int(card_number_input) == customer_list[tmp_check_owner_of_card_number].card_number:
                 if customer_list[tmp_check_owner_of_card_number].card_balance >= 0:
                     print('Witaj na naszym parkingu', customer_list[tmp_check_owner_of_card_number].name,'\nPamiętaj, aby przy wyjeździe zapłacić! :)')
                     tmp_check_owner_of_card_number += 1
                 else:
-                    print('Przykro mi przyjacielu, twoje karta jest na debecie, więc zgodnie z naszym regulaminem nie możesz wjechać na parking. :(')
+                    print('Przykro mi przyjacielu, twoje karta jest na debecie, więc zgodnie z naszym regulaminem nie możesz wjechać na parking :(')
                     exit()
             else:
                 tmp_check_owner_of_card_number += 1
@@ -65,22 +61,24 @@ def option2():
     card_number_input = ''
     card_number_input = input('Twój kod pin: ')
 
-    if validate_pin(card_number_input) == True:
+    if validate_pin(card_number_input):
         tmp_check_owner_of_card_number = 0
 
-        while(tmp_check_owner_of_card_number < 4):
+        while tmp_check_owner_of_card_number < 4:
 
-            if (int(card_number_input) == customer_list[tmp_check_owner_of_card_number].card_number):
+            if int(card_number_input) == customer_list[tmp_check_owner_of_card_number].card_number:
                 print('Bilans twojej karty [w PLN] to:', customer_list[tmp_check_owner_of_card_number].card_balance)
                 tmp_check_owner_of_card_number += 1
             else:
                 tmp_check_owner_of_card_number += 1
 
         exit()
+    else:
+        print('Niewłaściwy pin!')
 
 def main():
-        print('\nWitaj w systemie parkingowym \nWybierz opcje z menu.\n')
-        while(True):
+        print('\nWitaj w systemie parkingowym, \nwybierz opcje z menu:\n')
+        while True:
             print_menu()
 
             option = ''
@@ -100,4 +98,6 @@ def main():
             else:
                 print('Niewłaściwy numer. Proszę wprowadź numer w zakresie od 1 do 3')
 
-main()
+
+if __name__ == '__main__':
+    main()
