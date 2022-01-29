@@ -14,22 +14,11 @@ menu_options = {
     3: 'Wyjście'
 }
 
-class Customer:
-    def __init__(self, name, card_number, card_balance): 
-        self.name = name 
-        self.card_number = card_number
-        self.card_balance = card_balance
-
-#PSEUDO DATABASE
-customer_list = []
-customer_list.append(Customer('Paweł', 1234, -400))
-customer_list.append(Customer('Szymon', 2345, 500))
-customer_list.append(Customer('Łukasz', 3456, -600))
-customer_list.append(Customer('Danil', 4567, 700))
 
 def print_menu():
     for key in menu_options.keys():
         print (key, '--', menu_options[key])
+
 
 def validate_pin(card_number):
     if len(card_number) == 4:
@@ -37,9 +26,9 @@ def validate_pin(card_number):
     else:   
         return False
 
+
 def option1():
     print('Wpisz numer karty, aby móc wjechać na parking')
-
     card_number_input = input('Twój kod pin: ')
 
     if validate_pin(card_number_input):
@@ -64,7 +53,6 @@ def option1():
 
 def option2():
     print('Wpisz numer karty, aby sprawdzić jej bilans')
-
     card_number_input = input('Twój kod pin: ')
 
     if validate_pin(card_number_input):
@@ -73,7 +61,6 @@ def option2():
         if result:
             balance = result['acc_balance']
             print('Bilans twojej karty [w PLN] to:', balance)
-
         else:
             print("User not valid")
     else:

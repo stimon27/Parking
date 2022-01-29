@@ -1,7 +1,6 @@
 # Exit terminal
 
 import re
-
 import pymongo
 
 client = pymongo.MongoClient(
@@ -32,7 +31,6 @@ def validate_pin(card_number):
 
 def option1():
     print('Wpisz numer karty, aby zapłacić na parking i z niego wyjechać:')
-
     card_number_input = input('Twój kod pin: ')
 
     if validate_pin(card_number_input):
@@ -66,7 +64,6 @@ def main():
 
     while True:
         print_menu()
-
         option = ''
 
         try:
