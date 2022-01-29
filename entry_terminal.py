@@ -1,6 +1,12 @@
 #Entry terminal
 
 import re
+import pymongo
+
+client = pymongo.MongoClient(
+    "mongodb+srv://admin:admin@cluster01.yxbr3.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+
+database = client['CarSUSDB']
 
 menu_options = {
     1: 'Wjedź na parking',
@@ -37,44 +43,42 @@ def option1():
     card_number_input = input('Twój kod pin: ')
 
     if validate_pin(card_number_input):
-        tmp_check_owner_of_card_number = 0
+        result = database['Users'].find_one({'card_id': '{}'.format(card_number_input)})
 
-        while tmp_check_owner_of_card_number < 4:
+        if result:
+            login = result['login']
+            balance = result['acc_balance']
 
-            if int(card_number_input) == customer_list[tmp_check_owner_of_card_number].card_number:
-                if customer_list[tmp_check_owner_of_card_number].card_balance >= 0:
-                    print('Witaj na naszym parkingu', customer_list[tmp_check_owner_of_card_number].name,'\nPamiętaj, aby przy wyjeździe zapłacić! :)')
-                    tmp_check_owner_of_card_number += 1
-                else:
-                    print('Przykro mi przyjacielu, twoje karta jest na debecie, więc zgodnie z naszym regulaminem nie możesz wjechać na parking :(')
-                    exit()
+            if balance >= 0:
+                print('Witaj na naszym parkingu ', login,
+                      '\nPamiętaj, aby przy wyjeździe zapłacić! :)')
             else:
-                tmp_check_owner_of_card_number += 1
-
-        exit()
+                print('Przykro mi przyjacielu, twoje karta jest na debecie, '
+                      'więc zgodnie z naszym regulaminem nie możesz wjechać na parking :(')
+                exit()
+        else:
+            print("User not valid")
     else:
         print('Niewłaściwy pin!')
+
 
 def option2():
     print('Wpisz numer karty, aby sprawdzić jej bilans')
 
-    card_number_input = ''
     card_number_input = input('Twój kod pin: ')
 
     if validate_pin(card_number_input):
-        tmp_check_owner_of_card_number = 0
+        result = database['Users'].find_one({'card_id': '{}'.format(card_number_input)})
 
-        while tmp_check_owner_of_card_number < 4:
+        if result:
+            balance = result['acc_balance']
+            print('Bilans twojej karty [w PLN] to:', balance)
 
-            if int(card_number_input) == customer_list[tmp_check_owner_of_card_number].card_number:
-                print('Bilans twojej karty [w PLN] to:', customer_list[tmp_check_owner_of_card_number].card_balance)
-                tmp_check_owner_of_card_number += 1
-            else:
-                tmp_check_owner_of_card_number += 1
-
-        exit()
+        else:
+            print("User not valid")
     else:
         print('Niewłaściwy pin!')
+
 
 def main():
         print('\nWitaj w systemie parkingowym, \nwybierz opcje z menu:\n')
