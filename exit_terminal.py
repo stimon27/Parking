@@ -1,10 +1,8 @@
 # Exit terminal
+import math
+import re, datetime, pymongo, dns, certifi
 
-import re
-import pymongo
-
-client = pymongo.MongoClient(
-    "mongodb+srv://admin:admin@cluster01.yxbr3.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+client = pymongo.MongoClient("mongodb+srv://admin:admin@cluster01.yxbr3.mongodb.net/myFirstDatabase?retryWrites=true&w=majority", tlsCAFile=certifi.where())
 
 database = client['CarSUSDB']
 
@@ -13,9 +11,8 @@ menu_options = {
     2: 'Wyjście'
 }
 
-# PSUEDO PARKING CONST
-parking_cost = 100
-
+# HOURLY PARKING COST
+parking_cost = 5
 
 def print_menu():
     for key in menu_options.keys():
@@ -30,7 +27,7 @@ def validate_pin(card_number):
 
 
 def option1():
-    print('Wpisz numer karty, aby zapłacić na parking i z niego wyjechać:')
+    print('Wpisz numer karty, aby zapłacić za parking i z niego wyjechać:')
     card_number_input = input('Twój kod pin: ')
 
     if validate_pin(card_number_input):
@@ -41,18 +38,20 @@ def option1():
             login = result['login']
             balance = result['acc_balance']
 
-            if balance >= 0:
-                balance -= parking_cost
-                print('Zapłacono pomyślnie, możesz wyjechać z parkingu :)')
-                database['Users'].update_one(
-                    {'login': '{}'.format(login)},
-                    {"$set": {'acc_balance': balance}},
-                    True
-                )
-            else:
-                print('Przykro mi przyjacielu, twoje karta jest na debecie, '
-                      'więc zgodnie z naszym regulaminem nie możesz wyjechać z parkingu :(')
-                exit()
+            entry_time = datetime.datetime.strptime('31/01/22 18:00:00', '%d/%m/%y %H:%M:%S')
+            exit_time = datetime.datetime.now()
+
+            parking_hours = math.floor(abs((exit_time - entry_time).seconds / 3600))
+            if parking_hours == 0:
+                parking_hours = 1
+
+            balance -= parking_hours * parking_cost
+            print('Zapłacono pomyślnie, możesz wyjechać z parkingu :)')
+            database['Users'].update_one(
+                {'login': '{}'.format(login)},
+                {"$set": {'acc_balance': balance}},
+                True
+            )
         else:
             print("no user")
     else:
