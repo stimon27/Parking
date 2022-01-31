@@ -1,8 +1,8 @@
 #Entry terminal
 
-import re, datetime, pymongo
+import re, datetime, pymongo, dns, certifi
 
-client = pymongo.MongoClient("12")
+client = pymongo.MongoClient("mongodb+srv://admin:admin@cluster01.yxbr3.mongodb.net/myFirstDatabase?retryWrites=true&w=majority", tlsCAFile=certifi.where())
 
 database = client['CarSUSDB']
 
