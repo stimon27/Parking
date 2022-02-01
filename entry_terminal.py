@@ -1,8 +1,13 @@
-#Entry terminal
+# Entry terminal
 
-import re, datetime, pymongo, dns, certifi
+import datetime
 
-client = pymongo.MongoClient("mongodb+srv://admin:admin@cluster01.yxbr3.mongodb.net/myFirstDatabase?retryWrites=true&w=majority", tlsCAFile=certifi.where())
+import null as null
+import pymongo
+import re
+
+client = pymongo.MongoClient(
+    "mongodb+srv://admin:admin@cluster01.yxbr3.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
 
 database = client['CarSUSDB']
 
@@ -12,44 +17,67 @@ menu_options = {
     3: 'Wyjście'
 }
 
-enter_time = '' #tutaj pobieramy date i tam na dole po komunikacie pomyślnego wjazdu przypisujemy wartość aktualnej daty - dnia i godziny (do zrobienia dla danych z bazy) UWAGA data to obiekt typu datetime
+price = 4
+
 
 def print_menu():
+    print()
     for key in menu_options.keys():
-        print (key, '--', menu_options[key])
+        print(key, '--', menu_options[key])
+
 
 def validate_pin(card_number):
     if len(card_number) == 4:
         return re.search('[^0-9]', card_number) is None
-    else:   
+    else:
         return False
 
+
 def option1():
-    print('Wpisz numer karty, aby móc wjechać na parking')
+    print('\nWpisz numer karty, aby móc wjechać na parking')
     card_number_input = input('Twój kod pin: ')
 
     if validate_pin(card_number_input):
         result = database['Users'].find_one({'card_id': '{}'.format(card_number_input)})
-        if result:
-            login = result['login']
-            balance = result['acc_balance']
+        visit = database['Visits'].find_one({
+            'card_id': '{}'.format(card_number_input),
+            'status': 'running'
+        })
 
-            if balance >= 0:
-                print('Witaj na naszym parkingu ', login,
-                      '\nPamiętaj, aby przy wyjeździe zapłacić! :)')
-                enter_time=datetime.datetime.now() #tutaj zapisujemy do bazy czas wjazdu, czyli to co enter_time złapie wpisujemy do bazy jako czas wjazdu.
-                #print(enter_time) #jak działa wszystko to komentarze do kasacji.
+        if result:
+            if visit is None:
+                login = result['login']
+                balance = result['acc_balance']
+
+                if balance >= 0:
+                    print('\nWitaj na naszym parkingu ', login,
+                          '\nPamiętaj, aby przy wyjeździe zapłacić! :)')
+
+                    enter_time = datetime.datetime.now()
+
+                    visit = {
+                        "user_id": result["_id"],
+                        "enter_time": enter_time,
+                        "status": "running",
+                        "price": 0,
+                        "price_hour": price,
+                        "card_id": card_number_input
+                    }
+
+                    database["Visits"].insert_one(visit)
+                else:
+                    print('\nPrzykro mi przyjacielu, twoje karta jest na debecie, '
+                          '\nwięc zgodnie z naszym regulaminem nie możesz wjechać na parking :(')
             else:
-                print('Przykro mi przyjacielu, twoje karta jest na debecie, '
-                      'więc zgodnie z naszym regulaminem nie możesz wjechać na parking :(')
-                exit()
+                print("\nWygląda na to, że już u nas zaparkowałeś")
         else:
-            print("Niewłaściwe dane")
+            print("\nNiewłaściwe dane")
     else:
-        print('Niewłaściwy pin!')
+        print('\nNiewłaściwy pin!')
+
 
 def option2():
-    print('Wpisz numer karty, aby sprawdzić jej bilans')
+    print('\nWpisz numer karty, aby sprawdzić jej bilans')
     card_number_input = input('Twój kod pin: ')
 
     if validate_pin(card_number_input):
@@ -57,33 +85,35 @@ def option2():
 
         if result:
             balance = result['acc_balance']
-            print('Bilans twojej karty [w PLN] to:', balance)
+            print('\nBilans twojej karty [w PLN] to:', balance)
         else:
-            print("Niewłaściwe dane.")
+            print("\nNiewłaściwe dane.")
     else:
-        print('Niewłaściwy pin!')
+        print('\nNiewłaściwy pin!')
+
 
 def main():
-        print('\nWitaj w systemie parkingowym, \nwybierz opcje z menu:\n')
-        while True:
-            print_menu()
+    print('\nWitaj w systemie parkingowym, \nwybierz opcje z menu:')
+    while True:
+        print_menu()
 
-            option = ''
+        option = ''
 
-            try:
-                option = int(input('Wpisz numer wyboru: '))
-            except:
-                print('Niewłaściwe dane wejściowe. Proszę wprowadź numer ...')
+        try:
+            option = int(input('Wpisz numer wyboru: '))
+        except:
+            print('\nNiewłaściwe dane wejściowe. Proszę wprowadź numer ...')
 
-            if option == 1:
-                option1()
-            elif option == 2:
-                option2()
-            elif option == 3:
-                print('Do zobaczenia! :)')
-                exit()
-            else:
-                print('Niewłaściwy numer. Proszę wprowadź numer w zakresie od 1 do 3')
+        if option == 1:
+            option1()
+        elif option == 2:
+            option2()
+        elif option == 3:
+            print('\nDo zobaczenia! :)')
+            exit()
+        else:
+            print('\nNiewłaściwy numer. Proszę wprowadź numer w zakresie od 1 do 3')
+
 
 if __name__ == '__main__':
-  main()
+    main()

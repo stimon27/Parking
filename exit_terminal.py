@@ -1,8 +1,9 @@
 # Exit terminal
 import math
-import re, datetime, pymongo, dns, certifi
+import re, datetime, pymongo
 
-client = pymongo.MongoClient("mongodb+srv://admin:admin@cluster01.yxbr3.mongodb.net/myFirstDatabase?retryWrites=true&w=majority", tlsCAFile=certifi.where())
+client = pymongo.MongoClient(
+    "mongodb+srv://admin:admin@cluster01.yxbr3.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
 
 database = client['CarSUSDB']
 
@@ -11,10 +12,11 @@ menu_options = {
     2: 'Wyjście'
 }
 
-# HOURLY PARKING COST
 parking_cost = 5
 
+
 def print_menu():
+    print()
     for key in menu_options.keys():
         print(key, '--', menu_options[key])
 
@@ -27,39 +29,65 @@ def validate_pin(card_number):
 
 
 def option1():
-    print('Wpisz numer karty, aby zapłacić za parking i z niego wyjechać:')
+    print('\nWpisz numer karty, aby zapłacić za parking i z niego wyjechać')
     card_number_input = input('Twój kod pin: ')
 
     if validate_pin(card_number_input):
         result = database['Users'].find_one({'card_id': '{}'.format(card_number_input)})
 
         if result:
-            print(result)
             login = result['login']
             balance = result['acc_balance']
 
-            entry_time = datetime.datetime.strptime('31/01/22 18:00:00', '%d/%m/%y %H:%M:%S')
-            exit_time = datetime.datetime.now()
+            visit = database['Visits'].find_one({
+                'card_id': '{}'.format(card_number_input),
+                'status': 'running'
+            })
 
-            parking_hours = math.floor(abs((exit_time - entry_time).seconds / 3600))
-            if parking_hours == 0:
-                parking_hours = 1
+            if visit:
+                entry_time = visit['enter_time']
+                exit_time = datetime.datetime.now()
 
-            balance -= parking_hours * parking_cost
-            print('Zapłacono pomyślnie, możesz wyjechać z parkingu :)')
-            database['Users'].update_one(
-                {'login': '{}'.format(login)},
-                {"$set": {'acc_balance': balance}},
-                True
-            )
+                parking_hours = math.floor(abs((exit_time - entry_time).seconds / 3600))
+                parking_hours += 1
+
+                price = parking_hours * visit['price_hour']
+
+                balance -= price
+
+                database['Users'].update_one(
+                    {'login': '{}'.format(login)},
+                    {"$set": {'acc_balance': balance}},
+                    True
+                )
+
+                database['Visits'].update_one(
+                    {
+                        'card_id': '{}'.format(card_number_input),
+                        'status': 'running'
+                    },
+                    {
+                        "$set":
+                            {
+                                'status': "finished",
+                                'price': price,
+                                'leave_time': exit_time
+                            }
+                    },
+                    True
+                )
+
+                print('\nZapłacono pomyślnie, możesz wyjechać z parkingu :)')
+            else:
+                print("\nNajpierw zaparkuj u nas, dopiero póżniej zapłacisz")
         else:
-            print("no user")
+            print("\nUżytkownik nie istnieje")
     else:
-        print('Niewłaściwy pin!')
+        print('\nNiewłaściwy pin!')
 
 
 def main():
-    print('\nWitaj w systemie parkingowym, \nwybierz opcje z menu:\n')
+    print('\nWitaj w systemie parkingowym, \nwybierz opcje z menu:')
 
     while True:
         print_menu()
@@ -68,15 +96,15 @@ def main():
         try:
             option = int(input('Wpisz numer wyboru: '))
         except:
-            print('Niewłaściwe dane wejściowe. Proszę wprowadź numer ...')
+            print('\nNiewłaściwe dane wejściowe. Proszę wprowadź numer ...')
 
         if option == 1:
             option1()
         elif option == 2:
-            print('Do zobaczenia! :)')
+            print('\nDo zobaczenia! :)')
             exit()
         else:
-            print('Niewłaściwy numer. Proszę wprowadź numer 1 albo 2')
+            print('\nNiewłaściwy numer. Proszę wprowadź numer 1 albo 2')
 
 
 if __name__ == '__main__':
